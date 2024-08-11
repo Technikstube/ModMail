@@ -19,6 +19,7 @@ steps:
     event:
     - pull_request
     - push
+    - custom
     branch:
     - main
 
@@ -35,6 +36,7 @@ steps:
     event:
     - pull_request
     - push
+    - custom
     branch:
     - main
 
@@ -51,5 +53,6 @@ steps:
     event:
     - pull_request
     - push
+    - custom
     branch:
     - main
