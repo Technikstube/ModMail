@@ -64,7 +64,7 @@ class Modmail(commands.Cog):
                 
                 embed = discord.Embed(
                     title="Neues Ticket eröffnen",
-                    description="Willkommen zum Technikstube Support, wenn du Bereit bist dein Ticket zu öffnen, klicke einfach auf **Ticket starten**.\n" \
+                    description="Willkommen im Technikstube Support, wenn du Bereit bist dein Ticket zu öffnen, klicke einfach auf **Ticket starten**.\n" \
                         "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
                         "Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hast.",
                     color=discord.Color.blurple()
