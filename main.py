@@ -1,7 +1,8 @@
 import discord
 import os
+import random
 from dotenv import get_key
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from view.close import CloseView
 
@@ -21,6 +22,20 @@ class Modmail(commands.Bot):
             intents=intents
         )
 
+    @tasks.loop(minutes=60)
+    async def presence_tick(self):
+        choices: discord.Activity or discord.CustomActivity = [
+            discord.Activity(
+                type=discord.ActivityType.watching, name="Tickets"
+            ),
+            discord.CustomActivity(name="Technikstube Support"),
+            discord.CustomActivity(name="ModMail"),
+        ]
+
+        await self.change_presence(
+            activity=random.choice(choices), status=discord.Status.online
+        )
+
     async def setup_hook(self):
         self.add_view(CloseView())
     
@@ -34,6 +49,7 @@ class Modmail(commands.Bot):
                     await self.load_extension(f"{path.replace("/", ".")}{file[:-3]}")
     
         sync = await self.tree.sync()
+        await self.presence_tick.start()
         print(f"> Synced {len(sync)} Commands")
     
         print(
