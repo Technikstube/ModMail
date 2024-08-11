@@ -43,4 +43,4 @@ class Modmail(commands.Bot):
 
 bot = Modmail()
 
-bot.run(get_key(".env", "TOKEN"))
+bot.run(os.environ.get("TOKEN", get_key("./.env", "TOKEN")))
