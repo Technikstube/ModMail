@@ -1,0 +1,55 @@
+kind: pipeline
+type: docker
+name: deployment
+
+clone:
+  disable: false
+
+steps:
+
+- name: build
+  image: alpinelinux/docker-cli
+  environment:
+    DOCKER_HOST: tcp://192.168.2.10:2375
+  commands:
+  - docker build -t "modmail:latest" .
+  - docker tag modmail:latest 192.168.2.10:5000/modmail:latest
+  - docker push 192.168.2.10:5000/modmail:latest
+  when:
+    event:
+    - pull_request
+    - push
+    branch:
+    - main
+
+
+- name: destroy
+  image: alpinelinux/docker-cli
+  failure: ignore
+  environment:
+    DOCKER_HOST: tcp://192.168.2.10:2375
+  commands:
+  - docker stop modmail
+  - docker rm modmail
+  when:
+    event:
+    - pull_request
+    - push
+    branch:
+    - main
+
+- name: deploy
+  image: alpinelinux/docker-cli
+  environment:
+    DOCKER_HOST: tcp://192.168.2.10:2375
+    TOKEN:
+      from_secret: modmail_token
+  commands:
+  - docker pull 192.168.2.10:5000/modmail:latest
+  - docker run -d --name modmail --restart "unless-stopped" --network bridge -e "TOKEN"="$TOKEN" -v "ModMail":"/anLepp/modmail" 192.168.2.10:5000/modmail:latest
+  when:
+    event:
+    - pull_request
+    - push
+    branch:
+    - main
