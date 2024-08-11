@@ -27,7 +27,13 @@ class StartTicketView(ui.View):
             style=discord.ButtonStyle.gray,
             url="https://discord.com/channels/1030608164367913031/1139689635702915072",
             row=0,
-            label="FAQ",
+            label="Frequently Asked Questions",
+        )
+        self.rules = ui.Button(
+            style=discord.ButtonStyle.gray,
+            url="https://discord.com/channels/1030608164367913031/1134285504343453788",
+            row=0,
+            label="Regelwerk",
         )
         
         self.add_item(self.startbutton)
