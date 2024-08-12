@@ -58,7 +58,7 @@ class StartTicketModal(ui.Modal):
         embed.add_field(name="", value="Nutze `+` am am Anfang deiner Nachricht um sie nicht zum Nutzer zu senden.\n"\
             "Nutze `/close` um das Ticket zu schließen.")
         msg = await channel.send("<a:loading:1272207705913819176>")
-        await msg.edit(content=interaction.user.mention, embed=embed, view=CloseView(msg))
+        await msg.edit(content=f"{interaction.user.mention} <@&1139638391684726884>", embed=embed, view=CloseView(msg))
         await msg.pin()
         await self.msg.add_reaction("📨")
         await channel.purge(limit=1)
