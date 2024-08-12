@@ -4,7 +4,7 @@ from discord import ui
 from utility import Ticket
 
 class YouSureView(ui.View):
-    def __init__(self, executor_id: int, msg: discord.Interaction, reason: str | None=None):
+    def __init__(self, user_id: int, message: discord.Interaction, reason: str | None=None):
         super().__init__(
             timeout=60
         )
@@ -24,15 +24,15 @@ class YouSureView(ui.View):
         self.add_item(self.deletebutton)
         self.add_item(self.cancelbutton)
         
-        self.orig = msg
+        self.original_message = message
         self.reason = reason
-        self.executor = executor_id
+        self.user = user_id
         
         self.deletebutton.callback = self.delete_callback
         self.cancelbutton.callback = self.cancel_callback
         
     async def interaction_check(self, interaction: discord.Interaction):
-        if self.executor != interaction.user.id:
+        if self.user != interaction.user.id:
             await interaction.response.send_message("Das darfst du nicht...", ephemeral=True, delete_after=3)
             return False
         return True
@@ -40,7 +40,7 @@ class YouSureView(ui.View):
     async def delete_callback(self, interaction: discord.Interaction):
         self.deletebutton.disabled = True
         self.cancelbutton.disabled = True
-        await self.orig.edit_original_response(content="", view=self)
+        await self.original_message.edit_original_response(content="", view=self)
         
         tickets = Ticket().get()
         member = None
@@ -58,11 +58,11 @@ class YouSureView(ui.View):
         self.stop()
 
     async def cancel_callback(self, interaction: discord.Interaction):
-        await self.orig.delete_original_response()
+        await self.original_message.delete_original_response()
         await interaction.response.send_message("Vorgang abgebrochen...", ephemeral=True, delete_after=5)
         self.stop()
         
     async def on_timeout(self):
-        await self.orig.delete_original_response()
+        await self.original_message.delete_original_response()
         self.stop()
         
