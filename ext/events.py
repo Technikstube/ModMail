@@ -120,7 +120,10 @@ class Events(commands.Cog):
                     t[str(ticket)]["last_activity"] = datetime.now().timestamp()
                     Ticket().save(t)
                     break
-                
+            
+            if member is None:
+                return
+            
             if message.content.startswith("+"):
                 with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
                     date = datetime.now()
