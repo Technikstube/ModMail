@@ -61,15 +61,16 @@ class Events(commands.Cog):
                 return
             
             if not Ticket().get_ticket(message.author.id):
-                bot_msg = await message.reply("<a:loading:1272207705913819176>")
+                bot_msg = await message.reply("<a:loading:1272649967936471202> Einen Moment, ich bereite alles vor...")
                 user_msg = message
                 
                 embed = discord.Embed(
-                    title="Neues Ticket eröffnen",
-                    description="Willkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **Ticket starten**.\n" \
+                    title="",
+                    description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
                         "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
-                        "Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hast.",
-                    color=discord.Color.blurple()
+                        "" \
+                        "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hast.",
+                    color=discord.Color.green()
                 )
                 await bot_msg.edit(content="", embed=embed, view=StartTicketView(user_msg, bot_msg, self.bot))
                 return
@@ -198,16 +199,28 @@ class Events(commands.Cog):
             channel = self.bot.get_channel(ticket["channel"])
             msg = await channel.fetch_message(int(msg_id))
             await msg.edit(embed=embed, attachments=after.attachments)
+            
+            with open(f"ticket-{before.author.name}-{before.author.id}.txt", "a") as f:
+                date = datetime.now()
+                f.write(
+                    f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Editiert] {before.author.name}: {after.content}\n > vorher: {before.content}\n" \
+                )
         
         if isinstance(before.channel, discord.TextChannel):
             if not before.channel.name.startswith("ticket-"):
                 return
+        
             
             tickets = Ticket().get()
             for ticket in tickets:
                 if Ticket().get_ticket_channel_id(ticket) == before.channel.id:
                     msg_id = Ticket().get_copy_message(int(ticket), before.id)
                     member = before.guild.get_member(int(ticket))
+                    with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+                        date = datetime.now()
+                        f.write(
+                            f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Editiert] {before.author.name}: {after.content}\n > vorher: {before.content}\n" \
+                        )
                     channel = member.dm_channel
                     try:
                         msg = await channel.fetch_message(int(msg_id))

@@ -10,7 +10,7 @@ class StartTicketModal(ui.Modal):
     def __init__(self, message: discord.Message, bot: commands.Bot):
         super().__init__(
             title="Ticket öffnen",
-            timeout=300,
+            timeout=180,
             custom_id="open_dm_ticket"
         )
         
@@ -49,8 +49,8 @@ class StartTicketModal(ui.Modal):
         Ticket().save(tickets)
         
         embed = discord.Embed(
-            title=f"Neues Ticket von {interaction.user.name}", 
-            description=f"**Begründung:** {self.reason.value}",
+            title="", 
+            description=f"## :ticket: Ticket von {interaction.user.name} \n**Begründung:** {self.reason.value}\n\n",
             colour=discord.Color.lighter_gray())
         
         with open(f"ticket-{interaction.user.name}-{interaction.user.id}.txt", "w", encoding="utf-8") as f:
@@ -68,13 +68,14 @@ class StartTicketModal(ui.Modal):
         
         await interaction.response.send_message(interaction.user.mention, embed=embed)
         embed.add_field(name="", value="Nutze `+` am am Anfang deiner Nachricht um sie nicht zum Nutzer zu senden.\n"\
-            "Nutze `/close` um das Ticket zu schließen.")
-        msg = await channel.send("<a:loading:1272207705913819176>")
+            "Nutze `/close` um das Ticket zu schließen")
+        msg = await channel.send(f"<a:loading:1272649967936471202> | {interaction.user.mention} <@&1139638391684726884>")
         await msg.edit(content=f"{interaction.user.mention} <@&1139638391684726884>", embed=embed, view=CloseView(self.bot, msg))
         await msg.pin()
         await self.msg.add_reaction("📨")
         await channel.purge(limit=1)
-        await channel.send(embed=embed_user)
+        ticket_msg = await channel.send(embed=embed_user)
+        Ticket().add_message(self.msg.author.id, self.msg.id, ticket_msg.id)
         
     
     def on_timeout(self):

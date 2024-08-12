@@ -36,7 +36,7 @@ class Commands(commands.Cog):
         conf["ticket_category"] = category_id
         Config().save(conf)
         
-        await interaction.response.send_message(f"Ticket-Kategorie zu {_chn.name} gesetzt.", ephemeral=True)
+        await interaction.response.send_message(f"Ticket-Kategorie zu `{_chn.name}` gesetzt.", ephemeral=True)
 
     @app_commands.command(name="set_transcripts", description="Set the transcripts-channel")
     @commands.guild_only()
@@ -50,7 +50,7 @@ class Commands(commands.Cog):
         conf["transcript_channel"] = transcript_channel.id
         Config().save(conf)
         
-        await interaction.response.send_message(f"Transkript-Kanal zu {transcript_channel.name} gesetzt.", ephemeral=True)
+        await interaction.response.send_message(f"Transkript-Kanal zu {transcript_channel.mention} gesetzt.", ephemeral=True)
     
 async def setup(bot):
     await bot.add_cog(Commands(bot))

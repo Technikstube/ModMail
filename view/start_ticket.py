@@ -12,31 +12,32 @@ class StartTicketView(ui.View):
         self.startbutton = ui.Button(
             style=discord.ButtonStyle.green,
             emoji="<:helioscheckcircle:1267515445582237797>",
-            row=1,
+            row=0,
             label="Ticket starten",
         )
         self.cancelbutton = ui.Button(
             style=discord.ButtonStyle.danger,
-            row=1,
+            row=0,
             label="Abbrechen",
         )
         self.faq = ui.Button(
             style=discord.ButtonStyle.gray,
             url="https://discord.com/channels/1030608164367913031/1139689635702915072",
-            row=0,
-            label="Frequently Asked Questions",
+            row=1,
+            label="FAQ",
         )
         self.rules = ui.Button(
             style=discord.ButtonStyle.gray,
             url="https://discord.com/channels/1030608164367913031/1134285504343453788",
-            row=0,
+            row=1,
             label="Regelwerk",
         )
         
         self.add_item(self.startbutton)
         self.add_item(self.cancelbutton)
-        self.add_item(self.faq)
         self.add_item(self.rules)
+        self.add_item(self.faq)
+        
         
         self.original_message = bot_message
         self.user_message = user_message
@@ -56,7 +57,7 @@ class StartTicketView(ui.View):
     async def cancel_callback(self, interaction: discord.Interaction):
         embed = discord.Embed(
             title="Vorgang abgebrochen...",
-            description="Du hast das Ticket abgebrochen... Schreibe mich einfach wieder an, wenn du ein Anliegen hast!",
+            description="Das Ticket wurde verworfen. Vielen Dank für dein Interesse an Technikstube.",
             color=discord.Colour.red()
         )
         
@@ -71,7 +72,7 @@ class StartTicketView(ui.View):
     async def on_timeout(self):
         embed = discord.Embed(
             title="Vorgang abgebrochen...",
-            description="Der Vorgang wurde automatisch abgebrochen... Schreibe mich einfach wieder an, wenn du ein Anliegen hast!",
+            description="Das Ticket wurde verworfen.",
             color=discord.Colour.red()
         )
 

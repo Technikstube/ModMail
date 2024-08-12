@@ -9,23 +9,21 @@ class YouSureView(ui.View):
         super().__init__(
             timeout=60
         )
-        self.bot = bot
         self.deletebutton = ui.Button(
             style=discord.ButtonStyle.danger,
-            custom_id="sure",
             row=1,
-            label="Löschen",
+            label="Ticket löschen",
         )
         self.cancelbutton = ui.Button(
             style=discord.ButtonStyle.gray,
-            custom_id="notsure",
             row=1,
-            label="Behalten",
+            label="Abbrechen",
         )
         
         self.add_item(self.deletebutton)
         self.add_item(self.cancelbutton)
         
+        self.bot = bot
         self.original_message = message
         self.reason = reason
         self.user = user_id
@@ -35,7 +33,7 @@ class YouSureView(ui.View):
         
     async def interaction_check(self, interaction: discord.Interaction):
         if self.user != interaction.user.id:
-            await interaction.response.send_message("Das darfst du nicht...", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("> :warning: Das ist nicht dein Menü.", ephemeral=True, delete_after=3)
             return False
         return True
         
@@ -53,7 +51,8 @@ class YouSureView(ui.View):
                 tickets.pop(ticket)
                 break
         if member is not None:
-            embed = discord.Embed(title="Dein Ticket wurde geschlossen...", description=f"**Begründung:** {self.reason}" if self.reason is not None else "", color=discord.Color.red())
+            embed = discord.Embed(title="Ticket wurde geschlossen", description=f"**Begründung:** {self.reason}" if self.reason is not None else "", color=discord.Color.red())
+            embed.add_field(name="", value="Solltest du ein Anliegen haben, kannst du mich jederzeit wieder anschreiben.")
             await member.send(embed=embed)
         Ticket().save(tickets)
         await interaction.channel.delete()
