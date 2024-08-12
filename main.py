@@ -39,6 +39,15 @@ class Modmail(commands.Bot):
     async def setup_hook(self):
         self.add_view(CloseView())
     
+    async def on_connect(self):
+        choices: discord.Activity or discord.CustomActivity = [
+            discord.CustomActivity(name="¯\_(ツ)_/¯")
+        ]
+
+        await self.change_presence(
+            activity=random.choice(choices), status=discord.Status.dnd
+        )
+    
     async def on_ready(self):
         
         for path in paths:
