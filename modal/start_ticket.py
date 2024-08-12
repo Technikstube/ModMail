@@ -1,4 +1,5 @@
 import discord
+from datetime import datetime
 from discord.ext import commands
 from discord import ui
 
@@ -13,6 +14,7 @@ class StartTicketModal(ui.Modal):
             custom_id="open_dm_ticket"
         )
         
+        self.start = round(datetime.now().timestamp())
         self.msg: discord.Message = message
         self.bot: commands.Bot = bot
         self.reason = ui.TextInput(
@@ -50,6 +52,7 @@ class StartTicketModal(ui.Modal):
         
         embed_user = discord.Embed(title="", description=self.msg.content, color=discord.Color.brand_green())
         embed_user.set_author(name=self.msg.author.name, icon_url=self.msg.author.avatar.url if self.msg.author.avatar.url is not None else self.msg.author.default_avatar.url)
+        embed_user.add_field(name="", value=f"**Gesendet:** <t:{self.start}:R>")
         
         await interaction.response.send_message(interaction.user.mention, embed=embed)
         embed.add_field(name="", value="Nutze `+` am am Anfang deiner Nachricht um sie nicht zum Nutzer zu senden.\n"\
@@ -57,6 +60,7 @@ class StartTicketModal(ui.Modal):
         msg = await channel.send("<a:loading:1272207705913819176>")
         await msg.edit(content=interaction.user.mention, embed=embed, view=CloseView(msg))
         await msg.pin()
+        await self.msg.add_reaction("📨")
         await channel.purge(limit=1)
         await channel.send(embed=embed_user)
         
