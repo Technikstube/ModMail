@@ -1,5 +1,8 @@
 import discord
 import os
+import sys
+import asyncio
+import signal
 import random
 from dotenv import get_key
 from discord.ext import commands, tasks
@@ -65,6 +68,23 @@ class Modmail(commands.Bot):
             )
         
         await self.presence_tick.start()
+
+# Shutdown Handler
+def shutdown_handler(signum, frame):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(Modmail().logout())
+    # Cancel all tasks lingering
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+
+    [task.cancel() for task in tasks]
+
+    loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+    loop.close()
+
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, shutdown_handler)
 
 bot = Modmail()
 
