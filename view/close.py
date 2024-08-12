@@ -1,11 +1,12 @@
 import discord
+from typing import Optional
 from discord import ui
 
 from view.yousure import YouSureView
 from utility import Ticket
 
 class CloseView(ui.View):
-    def __init__(self):
+    def __init__(self, message: Optional[discord.Message]=None):
         super().__init__(
             timeout=None
         )
@@ -21,6 +22,9 @@ class CloseView(ui.View):
             row=1,
             label="Ticket archivieren",
         )
+        
+        if message is not None:
+            self.original_message = message
         
         self.add_item(self.closebutton)
         self.add_item(self.archivebutton)
@@ -52,6 +56,9 @@ class CloseView(ui.View):
                     await member.send(embed=embed)
                 Ticket().save(tickets)
                 name = interaction.channel.name
+                self.closebutton.disabled = True
+                self.archivebutton.disabled = True
+                await self.original_message.edit(view=self)
                 await interaction.channel.edit(name=name.replace("ticket", "archived"))
                 await interaction.response.send_message(content="Dieses Ticket wurde archiviert.", ephemeral=True)
                 return
