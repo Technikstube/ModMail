@@ -44,7 +44,7 @@ class Modmail(commands.Bot):
     
     async def on_connect(self):
         choices: discord.Activity or discord.CustomActivity = [
-            discord.CustomActivity(name="¯\_(ツ)_/¯")
+            discord.CustomActivity(name="¯\\_(ツ)_/¯")
         ]
 
         await self.change_presence(

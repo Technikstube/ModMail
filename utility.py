@@ -1,7 +1,7 @@
 import json
 
-config = "configuration.json"
-tickets = "tickets.json"
+config = "configuration/configuration.json"
+tickets = "configuration/tickets.json"
 
 class Config:
     def __init__(self):

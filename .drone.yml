@@ -48,7 +48,7 @@ steps:
       from_secret: modmail_token
   commands:
   - docker pull 192.168.2.10:5000/modmail:latest
-  - docker run -d --name modmail --restart "unless-stopped" --network bridge -e "TOKEN"="$TOKEN" -v "ModMail":"/anLepp/modmail" 192.168.2.10:5000/modmail:latest
+  - docker run -d --name modmail --restart "unless-stopped" --network bridge -e "TOKEN"="$TOKEN" -v "ModMail":"/modmail-bot/configuration" 192.168.2.10:5000/modmail:latest
   when:
     event:
     - pull_request
