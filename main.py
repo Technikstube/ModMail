@@ -19,7 +19,7 @@ paths = [
     "ext/"
 ]
 
-MAXIMUM_INACTIVE_SECONDS = 86400 # 24 hours in seconds
+MAXIMUM_INACTIVE_SECONDS = 21600 # 6 hours in seconds
 
 class Modmail(commands.Bot):
     def __init__(self):
@@ -28,33 +28,25 @@ class Modmail(commands.Bot):
             help_command=None,
             intents=intents
         )
-        
-    @tasks.loop(hours=1)
-    async def inactivity_checker(self):
+    
+    @tasks.loop(hours=24.1)
+    async def purge_inactive_tickets(self):
         TICKETS = Ticket().get() # One List that doesnt change, so that the for loop doesnt break lol.
         tickets = Ticket().get()
         conf = Config().get()
-        
-        stale_embed = discord.Embed(title="Dieses Ticket wurde als Inaktiv markiert.",
-                                    description="Dieses Ticket wird bei anhaltender Inaktivität automatisch gelöscht.",
-                                    color=discord.Color.orange()
-                                    )
         
         for ticket in TICKETS:
             member = None
             channel = None
             channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
             member = channel.guild.get_member(int(ticket))
-            dist = round(datetime.now().timestamp()) - round(tickets[str(ticket)]["last_activity"])
+            
             if tickets[str(ticket)]["stale"]:
-                if dist <= MAXIMUM_INACTIVE_SECONDS:
-                    tickets[str(ticket)]["stale"] = False
-                    Ticket().save(tickets)
-                    continue
                 channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
                 tickets.pop(str(ticket))
                 if member is not None:
-                    embed = discord.Embed(title="Dein Ticket wurde geschlossen...", description="**Begründung:** Inaktivität", color=discord.Color.red())
+                    embed = discord.Embed(title="Ticket wurde geschlossen", description="**Begründung:** Inaktivität", color=discord.Color.red())
+                    embed.add_field(name="", value="Solltest du ein Anliegen haben, kannst du mich jederzeit wieder anschreiben.")
                     await member.send(embed=embed)
                 Ticket().save(tickets)
                 await channel.delete()
@@ -65,15 +57,36 @@ class Modmail(commands.Bot):
                         await tc.send(embed=embed, file=discord.File(f))
                     os.remove(f"./ticket-{member.name}-{member.id}.txt")
                 continue
+    
+    @tasks.loop(hours=1.1)
+    async def inactive_marker(self):
+        TICKETS = Ticket().get() # One List that doesnt change, so that the for loop doesnt break lol.
+        tickets = Ticket().get()
+        
+        stale_embed = discord.Embed(title="",
+                                    description="<:uncheck:1226665497701912728> Ticket als `Inaktiv` markiert.",
+                                    color=discord.Color.red()
+                                    )
+        for ticket in TICKETS:
+            member = None
+            channel = None
+            channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+            member = channel.guild.get_member(int(ticket))
+            dist = round(datetime.now().timestamp()) - round(tickets[str(ticket)]["last_activity"])
             if dist >= MAXIMUM_INACTIVE_SECONDS:
+                if tickets[str(ticket)]["stale"] is True:
+                    continue
                 tickets[str(ticket)]["stale"] = True
                 Ticket().save(tickets)
                 await channel.send(embed=stale_embed)
+                
                 if member is not None:
                     await member.send(embed=stale_embed)
+                await channel.edit(name=channel.name.replace("ticket", "inactive"))
+                await channel.move(end=True)
                 continue
 
-    @tasks.loop(minutes=60)
+    @tasks.loop(minutes=60.1)
     async def presence_tick(self):
         choices: discord.Activity or discord.CustomActivity = [
             discord.Activity(
@@ -101,6 +114,10 @@ class Modmail(commands.Bot):
     
     async def on_ready(self):
         
+        self.presence_tick.start()
+        self.purge_inactive_tickets.start()
+        self.inactive_marker.start()
+        
         for path in paths:
             for file in os.listdir(path):
                 if file.startswith("-"):
@@ -114,9 +131,6 @@ class Modmail(commands.Bot):
         print(
             f">> {self.user.name} Ready"
             )
-        
-        self.presence_tick.start()
-        self.inactivity_checker.start()
 
 # Shutdown Handler
 def shutdown_handler(signum, frame):

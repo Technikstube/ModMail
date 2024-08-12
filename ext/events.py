@@ -68,7 +68,7 @@ class Events(commands.Cog):
                     title="",
                     description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
                         "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
-                        "" \
+                        "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
                         "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hast.",
                     color=discord.Color.green()
                 )
@@ -95,14 +95,19 @@ class Events(commands.Cog):
                 await channel.send(files=files)
             ticket = Ticket().get()
             ticket[str(message.author.id)]["last_activity"] = datetime.now().timestamp()
+            if ticket[str(message.author.id)]["stale"] is True:
+                ticket[str(message.author.id)]["stale"] = False
+                await channel.edit(name=channel.name.replace("inactive", "ticket"))
+                await channel.move(beginning=True)
             Ticket().save(ticket)
             Ticket().add_message(message.author.id, message.id, msg.id)
             
             await message.add_reaction("📨")
             
         if isinstance(message.channel, discord.TextChannel):
-            if not message.channel.name.startswith("ticket-"):
+            if not message.channel.name.startswith(("inactive-", "ticket-")):
                 return
+            
             if antispam_user["notified"] is True:
                 return
             if antispam_user["count"] == MAX_MESSAGES:
@@ -118,6 +123,12 @@ class Events(commands.Cog):
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
                     member = message.guild.get_member(int(ticket))
                     t = Ticket().get()
+                    if t[str(message.author.id)]["stale"] is True:
+                        t[str(message.author.id)]["stale"] = False
+                        await message.channel.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
+                        await member.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
+                        await message.channel.edit(name=message.channel.name.replace("inactive", "ticket"))
+                        await message.channel.move(beginning=True)
                     t[str(ticket)]["last_activity"] = datetime.now().timestamp()
                     Ticket().save(t)
                     break
