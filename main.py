@@ -50,12 +50,11 @@ class Modmail(commands.Bot):
     
         sync = await self.tree.sync()
         await self.presence_tick.start()
-        print(f"> Synced {len(sync)} Commands")
+        print(f"> Synced {len(sync)} commands")
     
         print(
-            "------------------------------" \
-            f"< {self.user.name} Ready >" \
-            "------------------------------")
+            f">> {self.user.name} Ready"
+            )
 
 bot = Modmail()
 
