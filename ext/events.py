@@ -1,20 +1,16 @@
 import discord
-from typing import Optional
 from datetime import datetime
 from discord.ext import commands
-from discord import app_commands
 
 from utility import Ticket
 from view.start_ticket import StartTicketView
-from view.yousure import YouSureView
 
 # Anti-Spam
 TIME_WINDOW_SECS = 5
 MAX_MESSAGES = 5
 DELETE_MESSAGES = MAX_MESSAGES
 
-
-class Modmail(commands.Cog):
+class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot: commands.Bot = bot
         self.cache = {}
@@ -176,23 +172,11 @@ class Modmail(commands.Cog):
                         await msg.edit(embed=embed, attachments=after.attachments)
                     except Exception:
                         pass
-
-    @app_commands.command(name="close", description="Close a Ticket")
-    @commands.guild_only()
-    @app_commands.default_permissions(manage_nicknames=True)
-    async def close_cmd(self, interaction: discord.Interaction, reason: Optional[str]):
-        for ticket in Ticket().get():
-            if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
-                embed = discord.Embed(title="Ticket löschen", description="Bist du dir sicher das du das Ticket löschen möchtest?", color=discord.Color.red())
-                await interaction.response.send_message(content="", embed=embed, view=YouSureView(interaction.user.id, interaction, reason))
-                return
-        await interaction.response.send_message("Dieser Kanal ist kein Ticket.", ephemeral=True, delete_after=3)
-        
         
 async def setup(bot):
-    await bot.add_cog(Modmail(bot))
+    await bot.add_cog(Events(bot))
     print(f"> {__name__} loaded")
     
 async def teardown(bot):
-    await bot.remove_cog(Modmail(bot))
+    await bot.remove_cog(Events(bot))
     print(f"> {__name__} unloaded")
