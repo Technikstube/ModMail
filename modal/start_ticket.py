@@ -40,9 +40,12 @@ class StartTicketModal(ui.Modal):
         channel = await category.create_text_channel(f"ticket-{interaction.user.name}")
         
         tickets = Ticket().get()
-        tickets[str(interaction.user.id)] = {}
-        tickets[str(interaction.user.id)]["channel"] = channel.id
-        tickets[str(interaction.user.id)]["message_ids"] = {}
+        tickets[str(interaction.user.id)] = {
+            "channel": channel.id,
+            "message_ids": {},
+            "last_activity": datetime.now().timestamp(),
+            "stale": False
+        }
         Ticket().save(tickets)
         
         embed = discord.Embed(

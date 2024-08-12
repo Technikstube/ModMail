@@ -86,7 +86,9 @@ class Events(commands.Cog):
             # Send Files if any
             if files:
                 await channel.send(files=files)
-            
+            ticket = Ticket().get()
+            ticket[str(message.author.id)]["last_activity"] = datetime.now().timestamp()
+            Ticket().save(ticket)
             Ticket().add_message(message.author.id, message.id, msg.id)
             
             await message.add_reaction("📨")
@@ -108,6 +110,9 @@ class Events(commands.Cog):
             for ticket in tickets:
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
                     member = message.guild.get_member(int(ticket))
+                    t = Ticket().get()
+                    t[str(ticket)]["last_activity"] = datetime.now().timestamp()
+                    Ticket().save(t)
                     break
                 
             if message.content.startswith("+"):

@@ -5,8 +5,10 @@ import asyncio
 import signal
 import random
 from dotenv import get_key
+from datetime import datetime
 from discord.ext import commands, tasks
 
+from utility import Ticket
 from view.close import CloseView
 
 intents = discord.Intents.default()
@@ -17,6 +19,8 @@ paths = [
     "ext/"
 ]
 
+MAXIMUM_INACTIVE_SECONDS = 86400 # 24 hours in seconds
+
 class Modmail(commands.Bot):
     def __init__(self):
         super().__init__(
@@ -24,6 +28,43 @@ class Modmail(commands.Bot):
             help_command=None,
             intents=intents
         )
+        
+    @tasks.loop(hours=1)
+    async def inactivity_checker(self):
+        TICKETS = Ticket().get() # One List that doesnt change, so that the for loop doesnt break lol.
+        tickets = Ticket().get()
+        
+        stale_embed = discord.Embed(title="Dieses Ticket wurde als Inaktiv markiert.",
+                                    description="Dieses Ticket wird bei anhaltender Inaktivität automatisch gelöscht.",
+                                    color=discord.Color.orange()
+                                    )
+        
+        for ticket in TICKETS:
+            member = None
+            channel = None
+            channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+            member = channel.guild.get_member(int(ticket))
+            dist = round(datetime.now().timestamp()) - round(tickets[str(ticket)]["last_activity"])
+            if tickets[str(ticket)]["stale"]:
+                if dist <= MAXIMUM_INACTIVE_SECONDS:
+                    tickets[str(ticket)]["stale"] = False
+                    Ticket().save(tickets)
+                    continue
+                channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+                tickets.pop(str(ticket))
+                if member is not None:
+                    embed = discord.Embed(title="Dein Ticket wurde geschlossen...", description="**Begründung:** Inaktivität", color=discord.Color.red())
+                    await member.send(embed=embed)
+                Ticket().save(tickets)
+                await channel.delete()
+                continue
+            if dist >= MAXIMUM_INACTIVE_SECONDS:
+                tickets[str(ticket)]["stale"] = True
+                Ticket().save(tickets)
+                await channel.send(embed=stale_embed)
+                if member is not None:
+                    await member.send(embed=stale_embed)
+                continue
 
     @tasks.loop(minutes=60)
     async def presence_tick(self):
@@ -67,7 +108,8 @@ class Modmail(commands.Bot):
             f">> {self.user.name} Ready"
             )
         
-        await self.presence_tick.start()
+        self.presence_tick.start()
+        self.inactivity_checker.start()
 
 # Shutdown Handler
 def shutdown_handler(signum, frame):
