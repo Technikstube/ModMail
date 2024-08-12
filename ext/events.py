@@ -83,6 +83,12 @@ class Events(commands.Cog):
             
             msg = await channel.send(embed=embed)
             
+            with open(f"ticket-{message.author.name}-{message.author.id}.txt", "a") as f:
+                date = datetime.now()
+                f.write(
+                    f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
+                )
+            
             # Send Files if any
             if files:
                 await channel.send(files=files)
@@ -116,6 +122,11 @@ class Events(commands.Cog):
                     break
                 
             if message.content.startswith("+"):
+                with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+                    date = datetime.now()
+                    f.write(
+                        f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Team] {message.author.name}: {message.content[1:]}\n"
+                    )
                 return
             
             files = []
@@ -126,7 +137,13 @@ class Events(commands.Cog):
             
             if files:
                 await member.send(files=files)
-                
+            
+            with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+                date = datetime.now()
+                f.write(
+                    f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
+                )
+            
             Ticket().add_message(member.id, message.id, msg.id)
             await message.add_reaction("📨")
     

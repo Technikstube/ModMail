@@ -6,10 +6,11 @@ from view.yousure import YouSureView
 from utility import Ticket
 
 class CloseView(ui.View):
-    def __init__(self, message: Optional[discord.Message]=None):
+    def __init__(self, bot, message: Optional[discord.Message]=None):
         super().__init__(
             timeout=None
         )
+        self.bot = bot
         self.closebutton = ui.Button(
             style=discord.ButtonStyle.gray,
             custom_id="close_ticket",
@@ -27,7 +28,6 @@ class CloseView(ui.View):
             self.original_message = message
         
         self.add_item(self.closebutton)
-        self.add_item(self.archivebutton)
         
         self.closebutton.callback = self.close_callback
         self.archivebutton.callback = self.archive_callback
@@ -36,7 +36,7 @@ class CloseView(ui.View):
         for ticket in Ticket().get():
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 embed = discord.Embed(title="Ticket löschen", description="Bist du dir sicher das du das Ticket löschen möchtest?", color=discord.Color.red())
-                await interaction.response.send_message(content="", embed=embed, view=YouSureView(interaction.user.id, interaction, None))
+                await interaction.response.send_message(content="", embed=embed, view=YouSureView(self.bot, interaction.user.id, interaction, None))
                 self.stop()
                 return
         await interaction.response.send_message(content="Dieses Ticket wurde archiviert. Bitte einen Administrator darum, es zu löschen.", ephemeral=True, delete_after=3)

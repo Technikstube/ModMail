@@ -17,7 +17,7 @@ class Commands(commands.Cog):
         for ticket in Ticket().get():
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 embed = discord.Embed(title="Ticket löschen?", description="Bist du dir sicher das du das Ticket löschen möchtest?", color=discord.Color.red())
-                await interaction.response.send_message(content="", embed=embed, view=YouSureView(interaction.user.id, interaction, reason))
+                await interaction.response.send_message(content="", embed=embed, view=YouSureView(self.bot, interaction.user.id, interaction, reason))
                 return
 
         await interaction.response.send_message("Dieser Kanal ist kein Ticket.", ephemeral=True, delete_after=3)
@@ -25,7 +25,7 @@ class Commands(commands.Cog):
     @app_commands.command(name="set_category", description="Set the Ticket-Category")
     @commands.guild_only()
     @app_commands.default_permissions(manage_guild=True)
-    async def set_command(self, interaction: discord.Interaction, category_id: str):
+    async def category_command(self, interaction: discord.Interaction, category_id: str):
         conf = Config().get()
         
         _chn = self.bot.get_channel(int(category_id))
@@ -37,6 +37,20 @@ class Commands(commands.Cog):
         Config().save(conf)
         
         await interaction.response.send_message(f"Ticket-Kategorie zu {_chn.name} gesetzt.", ephemeral=True)
+
+    @app_commands.command(name="set_transcripts", description="Set the transcripts-channel")
+    @commands.guild_only()
+    @app_commands.default_permissions(manage_guild=True)
+    async def transcript_command(self, interaction: discord.Interaction, transcript_channel: discord.TextChannel):
+        conf = Config().get()
+        
+        if not isinstance(transcript_channel, discord.TextChannel):
+            await interaction.response.send_message("Das ist kein Textkanal.", ephemeral=True)
+        
+        conf["transcript_channel"] = transcript_channel.id
+        Config().save(conf)
+        
+        await interaction.response.send_message(f"Transkript-Kanal zu {transcript_channel.name} gesetzt.", ephemeral=True)
     
 async def setup(bot):
     await bot.add_cog(Commands(bot))

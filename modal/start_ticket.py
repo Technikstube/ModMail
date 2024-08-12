@@ -53,6 +53,15 @@ class StartTicketModal(ui.Modal):
             description=f"**Begründung:** {self.reason.value}",
             colour=discord.Color.lighter_gray())
         
+        with open(f"ticket-{interaction.user.name}-{interaction.user.id}.txt", "w", encoding="utf-8") as f:
+            date = datetime.now()
+            f.write(
+                f"# Ticket erstellt am: {date.day}.{date.month}.{date.year}, {date.hour}:{date.minute}:{date.second}\n" \
+                f"# Grund: {self.reason.value}\n" \
+                f"# von: {interaction.user.name} ({interaction.user.id})\n\n" \
+                f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {interaction.user.name}: {self.msg.content}\n"
+            )
+        
         embed_user = discord.Embed(title="", description=self.msg.content, color=discord.Color.brand_green())
         embed_user.set_author(name=self.msg.author.name, icon_url=self.msg.author.avatar.url if self.msg.author.avatar.url is not None else self.msg.author.default_avatar.url)
         embed_user.add_field(name="", value=f"**Gesendet:** <t:{self.start}:R>")
@@ -61,7 +70,7 @@ class StartTicketModal(ui.Modal):
         embed.add_field(name="", value="Nutze `+` am am Anfang deiner Nachricht um sie nicht zum Nutzer zu senden.\n"\
             "Nutze `/close` um das Ticket zu schließen.")
         msg = await channel.send("<a:loading:1272207705913819176>")
-        await msg.edit(content=f"{interaction.user.mention} <@&1139638391684726884>", embed=embed, view=CloseView(msg))
+        await msg.edit(content=f"{interaction.user.mention} <@&1139638391684726884>", embed=embed, view=CloseView(self.bot, msg))
         await msg.pin()
         await self.msg.add_reaction("📨")
         await channel.purge(limit=1)

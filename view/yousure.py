@@ -1,13 +1,15 @@
 import discord
+import os
 from discord import ui
 
-from utility import Ticket
+from utility import Ticket, Config
 
 class YouSureView(ui.View):
-    def __init__(self, user_id: int, message: discord.Interaction, reason: str | None=None):
+    def __init__(self, bot, user_id: int, message: discord.Interaction, reason: str | None=None):
         super().__init__(
             timeout=60
         )
+        self.bot = bot
         self.deletebutton = ui.Button(
             style=discord.ButtonStyle.danger,
             custom_id="sure",
@@ -43,6 +45,7 @@ class YouSureView(ui.View):
         await self.original_message.edit_original_response(content="", view=self)
         
         tickets = Ticket().get()
+        conf = Config().get()
         member = None
         for ticket in tickets:
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
@@ -54,7 +57,12 @@ class YouSureView(ui.View):
             await member.send(embed=embed)
         Ticket().save(tickets)
         await interaction.channel.delete()
-        
+        if "transcript_channel" in conf:
+            tc = self.bot.get_channel(int(conf["transcript_channel"]))
+            with open(f"ticket-{member.name}-{member.id}.txt", "rb") as f:
+                embed = discord.Embed(title="", description=f"{interaction.channel.name} wurde von {interaction.user.mention} geschlossen.", color=discord.Color.blue())
+                await tc.send(embed=embed, file=discord.File(f))
+            os.remove(f"./ticket-{member.name}-{member.id}.txt")
         self.stop()
 
     async def cancel_callback(self, interaction: discord.Interaction):

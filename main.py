@@ -8,7 +8,7 @@ from dotenv import get_key
 from datetime import datetime
 from discord.ext import commands, tasks
 
-from utility import Ticket
+from utility import Ticket, Config
 from view.close import CloseView
 
 intents = discord.Intents.default()
@@ -33,6 +33,7 @@ class Modmail(commands.Bot):
     async def inactivity_checker(self):
         TICKETS = Ticket().get() # One List that doesnt change, so that the for loop doesnt break lol.
         tickets = Ticket().get()
+        conf = Config().get()
         
         stale_embed = discord.Embed(title="Dieses Ticket wurde als Inaktiv markiert.",
                                     description="Dieses Ticket wird bei anhaltender Inaktivität automatisch gelöscht.",
@@ -57,6 +58,12 @@ class Modmail(commands.Bot):
                     await member.send(embed=embed)
                 Ticket().save(tickets)
                 await channel.delete()
+                if "transcript_channel" in conf:
+                    tc = self.get_channel(int(conf["transcript_channel"]))
+                    with open(f"ticket-{member.name}-{member.id}.txt", "rb") as f:
+                        embed = discord.Embed(title="", description=f"{channel.name} wurde von {self.user.mention} geschlossen.", color=discord.Color.blue())
+                        await tc.send(embed=embed, file=discord.File(f))
+                    os.remove(f"./ticket-{member.name}-{member.id}.txt")
                 continue
             if dist >= MAXIMUM_INACTIVE_SECONDS:
                 tickets[str(ticket)]["stale"] = True
@@ -81,7 +88,7 @@ class Modmail(commands.Bot):
         )
 
     async def setup_hook(self):
-        self.add_view(CloseView())
+        self.add_view(CloseView(self))
     
     async def on_connect(self):
         choices: discord.Activity or discord.CustomActivity = [
