@@ -16,9 +16,10 @@ class Commands(commands.Cog):
     async def close_command(self, interaction: discord.Interaction, reason: Optional[str]):
         for ticket in Ticket().get():
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
-                embed = discord.Embed(title="Ticket löschen", description="Bist du dir sicher das du das Ticket löschen möchtest?", color=discord.Color.red())
+                embed = discord.Embed(title="Ticket löschen?", description="Bist du dir sicher das du das Ticket löschen möchtest?", color=discord.Color.red())
                 await interaction.response.send_message(content="", embed=embed, view=YouSureView(interaction.user.id, interaction, reason))
                 return
+
         await interaction.response.send_message("Dieser Kanal ist kein Ticket.", ephemeral=True, delete_after=3)
     
     @app_commands.command(name="set_category", description="Set the Ticket-Category")

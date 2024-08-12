@@ -54,6 +54,7 @@ class Events(commands.Cog):
                     await message.author.send("> :warning: Spam ist nicht erwünscht!", delete_after=5)
                     antispam_user["notified"] = True
                 return
+            
             if not Ticket().get_ticket(message.author.id):
                 bot_msg = await message.reply("<a:loading:1272207705913819176>")
                 user_msg = message
@@ -69,14 +70,20 @@ class Events(commands.Cog):
                 return
             
             channel = self.bot.get_channel(Ticket().get_ticket(message.author.id)["channel"])
+            
+            # Check for Attachments
             files = []
             for attachment in message.attachments:
                 files.append(await attachment.to_file())
             
             msg = await channel.send(embed=embed)
+            
+            # Send Files if any
             if files:
                 await channel.send(files=files)
+            
             Ticket().add_message(message.author.id, message.id, msg.id)
+            
             await message.add_reaction("📨")
             
         if isinstance(message.channel, discord.TextChannel):
@@ -97,14 +104,19 @@ class Events(commands.Cog):
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
                     member = message.guild.get_member(int(ticket))
                     break
+                
             if message.content.startswith("+"):
                 return
+            
             files = []
             for attachment in message.attachments:
                 files.append(await attachment.to_file())
+                
             msg = await member.send(embed=embed)
+            
             if files:
                 await member.send(files=files)
+                
             Ticket().add_message(member.id, message.id, msg.id)
             await message.add_reaction("📨")
     
