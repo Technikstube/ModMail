@@ -123,8 +123,8 @@ class Events(commands.Cog):
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
                     member = message.guild.get_member(int(ticket))
                     t = Ticket().get()
-                    if t[str(message.author.id)]["stale"] is True:
-                        t[str(message.author.id)]["stale"] = False
+                    if t[str(ticket)]["stale"] is True:
+                        t[str(ticket)]["stale"] = False
                         await message.channel.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
                         await member.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
                         await message.channel.edit(name=message.channel.name.replace("inactive", "ticket"))
