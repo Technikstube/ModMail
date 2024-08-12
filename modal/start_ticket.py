@@ -19,7 +19,6 @@ class StartTicketModal(ui.Modal):
         self.reason = ui.TextInput(
             label="Begründung",
             style=discord.TextStyle.short,
-            custom_id="dm_ticket_reason",
             min_length=4,
             max_length=64,
             placeholder="Deine Begründung...",
