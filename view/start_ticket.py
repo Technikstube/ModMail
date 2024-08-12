@@ -36,6 +36,7 @@ class StartTicketView(ui.View):
         self.add_item(self.startbutton)
         self.add_item(self.cancelbutton)
         self.add_item(self.faq)
+        self.add_item(self.rules)
         
         self.original_message = bot_message
         self.user_message = user_message

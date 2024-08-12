@@ -25,18 +25,15 @@ class Commands(commands.Cog):
     @app_commands.command(name="set_category", description="Set the Ticket-Category")
     @commands.guild_only()
     @app_commands.default_permissions(manage_guild=True)
-    async def set_command(self, interaction: discord.Interaction, category_id: int):
+    async def set_command(self, interaction: discord.Interaction, category_id: str):
         conf = Config().get()
         
-        if str(interaction.guild.id) not in conf:
-            conf[str(interaction.guild.id)] = {}
-        
-        _chn = self.bot.get_channel(category_id)
+        _chn = self.bot.get_channel(int(category_id))
         
         if not isinstance(_chn, discord.CategoryChannel):
             await interaction.response.send_message("Das ist keine Kategorie.", ephemeral=True)
         
-        conf[str(interaction.guild.id)]["ticket_category"] = category_id
+        conf["ticket_category"] = category_id
         Config().save(conf)
         
         await interaction.response.send_message(f"Ticket-Kategorie zu {_chn.name} gesetzt.", ephemeral=True)

@@ -2,8 +2,7 @@ import discord
 from discord.ext import commands
 from discord import ui
 
-from utility import Ticket
-from constants import Channels
+from utility import Ticket, Config
 from view.close import CloseView
 
 class StartTicketModal(ui.Modal):
@@ -28,9 +27,14 @@ class StartTicketModal(ui.Modal):
         
         self.add_item(self.reason)
         
-    async def on_submit(self, interaction: discord.Interaction):
-        category = self.bot.get_channel(Channels.Ticket_Category)
+    async def on_submit(self, interaction: discord.Interaction):        
+        conf = Config().get()
         
+        if "ticket_category" not in conf:
+            await interaction.response.send_message("Die Ticket-Kategorie ist nicht eingerichtet. Bitte melde dich bei der Administration.")
+            return
+        
+        category = self.bot.get_channel(int(conf["ticket_category"]))
         channel = await category.create_text_channel(f"ticket-{interaction.user.name}")
         
         tickets = Ticket().get()

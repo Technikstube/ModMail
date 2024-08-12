@@ -49,12 +49,13 @@ class Modmail(commands.Bot):
                     await self.load_extension(f"{path.replace("/", ".")}{file[:-3]}")
     
         sync = await self.tree.sync()
-        await self.presence_tick.start()
         print(f"> Synced {len(sync)} commands")
     
         print(
             f">> {self.user.name} Ready"
             )
+        
+        await self.presence_tick.start()
 
 bot = Modmail()
 

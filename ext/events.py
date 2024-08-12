@@ -2,7 +2,7 @@ import discord
 from datetime import datetime
 from discord.ext import commands
 
-from utility import Ticket
+from utility import Ticket, Config
 from view.start_ticket import StartTicketView
 
 # Anti-Spam
@@ -53,6 +53,11 @@ class Events(commands.Cog):
                 if not antispam_user["notified"]:
                     await message.author.send("> :warning: Spam ist nicht erwünscht!", delete_after=5)
                     antispam_user["notified"] = True
+                return
+            
+            conf = Config().get()
+            if "ticket_category" not in conf:
+                await message.channel.send("Die Ticket-Kategorie ist nicht eingerichtet. Melde dich bitte bei der Administration.")
                 return
             
             if not Ticket().get_ticket(message.author.id):
