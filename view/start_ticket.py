@@ -4,22 +4,19 @@ from discord import ui
 from modal.start_ticket import StartTicketModal
 
 class StartTicketView(ui.View):
-    def __init__(self, user_msg: discord.Message, bot_msg: discord.Message, bot):
+    def __init__(self, user_message: discord.Message, bot_message: discord.Message, bot):
         super().__init__(
             timeout=180
         )
         self.bot = bot
         self.startbutton = ui.Button(
             style=discord.ButtonStyle.green,
-            custom_id="open_dm_ticket_button",
             emoji="<:helioscheckcircle:1267515445582237797>",
             row=1,
             label="Ticket starten",
         )
         self.cancelbutton = ui.Button(
             style=discord.ButtonStyle.danger,
-            custom_id="cancel_dm_ticket_button",
-            # emoji="",
             row=1,
             label="Abbrechen",
         )
@@ -40,8 +37,8 @@ class StartTicketView(ui.View):
         self.add_item(self.cancelbutton)
         self.add_item(self.faq)
         
-        self.orig = bot_msg
-        self.user_msg = user_msg
+        self.original_message = bot_message
+        self.user_message = user_message
         
         self.startbutton.callback = self.start_callback
         self.cancelbutton.callback = self.cancel_callback
@@ -50,8 +47,8 @@ class StartTicketView(ui.View):
         self.startbutton.disabled = True
         self.cancelbutton.disabled = True
         
-        await interaction.response.send_modal(StartTicketModal(self.user_msg, self.bot))
-        await self.orig.edit(content="", view=self)
+        await interaction.response.send_modal(StartTicketModal(self.user_message, self.bot))
+        await self.original_message.edit(content="", view=self)
         
         self.stop()
 
@@ -67,7 +64,7 @@ class StartTicketView(ui.View):
         self.startbutton.disabled = True
         self.cancelbutton.disabled = True
         
-        await self.orig.edit(content="", view=self)
+        await self.original_message.edit(content="", view=self)
         self.stop()
         
     async def on_timeout(self):
@@ -77,10 +74,10 @@ class StartTicketView(ui.View):
             color=discord.Colour.red()
         )
 
-        await self.orig.channel.send(embed=embed)
+        await self.original_message.channel.send(embed=embed)
         
         self.startbutton.disabled = True
         self.cancelbutton.disabled = True
         
-        await self.orig.edit(content="", view=self)
+        await self.original_message.edit(content="", view=self)
         self.stop()
