@@ -1,4 +1,5 @@
 import discord
+import os
 from datetime import datetime
 from discord.ext import commands
 
@@ -84,7 +85,7 @@ class Events(commands.Cog):
             
             msg = await channel.send(embed=embed)
             
-            with open(f"ticket-{message.author.name}-{message.author.id}.txt", "a") as f:
+            with open(f"configuration/{Ticket().get_ticket(message.author.id).get("transcript")}", "a") as f:
                 date = datetime.now()
                 f.write(
                     f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
@@ -117,12 +118,14 @@ class Events(commands.Cog):
                 return
             
             member = None
+            transcript = None
             tickets = Ticket().get()
             
             for ticket in tickets:
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
                     member = message.guild.get_member(int(ticket))
                     t = Ticket().get()
+                    transcript = t[str(ticket)].get("transcript")
                     if t[str(ticket)]["stale"] is True:
                         t[str(ticket)]["stale"] = False
                         await message.channel.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
@@ -137,7 +140,7 @@ class Events(commands.Cog):
                 return
             
             if message.content.startswith("+"):
-                with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+                with open(f"configuration/{transcript}", "a") as f:
                     date = datetime.now()
                     f.write(
                         f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Team] {message.author.name}: {message.content[1:]}\n"
@@ -153,7 +156,7 @@ class Events(commands.Cog):
             if files:
                 await member.send(files=files)
             
-            with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+            with open(f"configuration/{transcript}", "a") as f:
                 date = datetime.now()
                 f.write(
                     f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
@@ -179,10 +182,7 @@ class Events(commands.Cog):
             
             await msg.edit(embed=embed, attachments=message.attachments)
         
-        if isinstance(message.channel, discord.TextChannel):
-            if not message.channel.name.startswith("ticket-"):
-                return
-            
+        if isinstance(message.channel, discord.TextChannel):           
             tickets = Ticket().get()
             for ticket in tickets:
                 if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
@@ -206,28 +206,27 @@ class Events(commands.Cog):
         
         if isinstance(before.channel, discord.DMChannel):
             ticket = Ticket().get_ticket(before.author.id)
+            transcript = ticket.get("transcript")
             msg_id = Ticket().get_copy_message(before.author.id, before.id)
             channel = self.bot.get_channel(ticket["channel"])
             msg = await channel.fetch_message(int(msg_id))
             await msg.edit(embed=embed, attachments=after.attachments)
             
-            with open(f"ticket-{before.author.name}-{before.author.id}.txt", "a") as f:
+            with open(f"configuration/{transcript}", "a") as f:
                 date = datetime.now()
                 f.write(
                     f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Editiert] {before.author.name}: {after.content}\n > vorher: {before.content}\n" \
                 )
         
-        if isinstance(before.channel, discord.TextChannel):
-            if not before.channel.name.startswith("ticket-"):
-                return
-        
-            
+        if isinstance(before.channel, discord.TextChannel):            
             tickets = Ticket().get()
+            transcript = ""
             for ticket in tickets:
                 if Ticket().get_ticket_channel_id(ticket) == before.channel.id:
                     msg_id = Ticket().get_copy_message(int(ticket), before.id)
                     member = before.guild.get_member(int(ticket))
-                    with open(f"ticket-{member.name}-{member.id}.txt", "a") as f:
+                    transcript = tickets[str(ticket)].get("transcript")
+                    with open(f"configuration/{transcript}", "a") as f:
                         date = datetime.now()
                         f.write(
                             f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Editiert] {before.author.name}: {after.content}\n > vorher: {before.content}\n" \
@@ -238,6 +237,27 @@ class Events(commands.Cog):
                         await msg.edit(embed=embed, attachments=after.attachments)
                     except Exception:
                         pass
+                    
+    @commands.Cog.listener(name="on_member_remove")
+    async def on_member_remove(self, member: discord.Member):
+        conf = Config().get()
+        tickets = Ticket().get()
+        transcript = ""
+        
+        for ticket in tickets:
+            if ticket == str(member.id):
+                channel = self.bot.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+                transcript = tickets[str(ticket)]["transcript"]
+                tickets.pop(str(ticket))
+                Ticket().save(tickets)
+                await channel.delete()
+                if "transcript_channel" in conf:
+                    tc = self.bot.get_channel(int(conf["transcript_channel"]))
+                    with open(f"configuration/{transcript}", "rb") as f:
+                        embed = discord.Embed(title="", description=f"{channel.name} wurde von {self.bot.user.mention} geschlossen. (Nutzer hat den Server verlassen)", color=discord.Color.blue())
+                        await tc.send(embed=embed, file=discord.File(f))
+                    os.remove(f"./configuration/{transcript}")
+                break
         
 async def setup(bot):
     await bot.add_cog(Events(bot))

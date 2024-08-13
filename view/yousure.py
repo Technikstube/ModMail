@@ -45,9 +45,11 @@ class YouSureView(ui.View):
         tickets = Ticket().get()
         conf = Config().get()
         member = None
+        transcript = ""
         for ticket in tickets:
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 member = interaction.guild.get_member(int(ticket))
+                transcript = Ticket().get()[str(ticket)].get("transcript")
                 tickets.pop(ticket)
                 break
         if member is not None:
@@ -58,10 +60,10 @@ class YouSureView(ui.View):
         await interaction.channel.delete()
         if "transcript_channel" in conf:
             tc = self.bot.get_channel(int(conf["transcript_channel"]))
-            with open(f"ticket-{member.name}-{member.id}.txt", "rb") as f:
+            with open(f"configuration/{transcript}", "rb") as f:
                 embed = discord.Embed(title="", description=f"{interaction.channel.name} wurde von {interaction.user.mention} geschlossen.", color=discord.Color.blue())
                 await tc.send(embed=embed, file=discord.File(f))
-            os.remove(f"./ticket-{member.name}-{member.id}.txt")
+            os.remove(f"./configuration/{transcript}")
         self.stop()
 
     async def cancel_callback(self, interaction: discord.Interaction):

@@ -40,9 +40,11 @@ class Modmail(commands.Bot):
             channel = None
             channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
             member = channel.guild.get_member(int(ticket))
+            transcript = ""
             
             if tickets[str(ticket)]["stale"]:
                 channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+                transcript = tickets[str(ticket)]["transcript"]
                 tickets.pop(str(ticket))
                 if member is not None:
                     embed = discord.Embed(title="Ticket wurde geschlossen", description="**Begründung:** Inaktivität", color=discord.Color.red())
@@ -52,10 +54,10 @@ class Modmail(commands.Bot):
                 await channel.delete()
                 if "transcript_channel" in conf:
                     tc = self.get_channel(int(conf["transcript_channel"]))
-                    with open(f"ticket-{member.name}-{member.id}.txt", "rb") as f:
+                    with open(f"configuration/{transcript}", "rb") as f:
                         embed = discord.Embed(title="", description=f"{channel.name} wurde von {self.user.mention} geschlossen.", color=discord.Color.blue())
                         await tc.send(embed=embed, file=discord.File(f))
-                    os.remove(f"./ticket-{member.name}-{member.id}.txt")
+                    os.remove(f"./configuration/{transcript}")
                 continue
     
     @tasks.loop(minutes=1.1)

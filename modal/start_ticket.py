@@ -31,21 +31,26 @@ class StartTicketModal(ui.Modal):
         
     async def on_submit(self, interaction: discord.Interaction):        
         conf = Config().get()
+        tickets = Ticket().get()
         
         if "ticket_category" not in conf:
             await interaction.response.send_message("Die Ticket-Kategorie ist nicht eingerichtet. Bitte melde dich bei der Administration.")
+            return
+        
+        if str(interaction.user.id) in tickets:
+            await interaction.response.send_message("Du hast bereits ein Ticket.", ephemeral=True, delete_after=3)
             return
         
         category = self.bot.get_channel(int(conf["ticket_category"]))
         channel = await category.create_text_channel(f"ticket-{interaction.user.name}")
         await channel.move(beginning=True)
         
-        tickets = Ticket().get()
         tickets[str(interaction.user.id)] = {
             "channel": channel.id,
             "message_ids": {},
             "last_activity": datetime.now().timestamp(),
-            "stale": False
+            "stale": False,
+            "transcript": f"ticket-{interaction.user.name}-{interaction.user.id}.txt"
         }
         Ticket().save(tickets)
         
@@ -54,7 +59,7 @@ class StartTicketModal(ui.Modal):
             description=f"## :ticket: Ticket von {interaction.user.name} \n**Begründung:** {self.reason.value}\n\n",
             colour=discord.Color.lighter_gray())
         
-        with open(f"ticket-{interaction.user.name}-{interaction.user.id}.txt", "w", encoding="utf-8") as f:
+        with open(f"configuration/ticket-{interaction.user.name}-{interaction.user.id}.txt", "w", encoding="utf-8") as f:
             date = datetime.now()
             f.write(
                 f"# Ticket erstellt am: {date.day}.{date.month}.{date.year}, {date.hour}:{date.minute}:{date.second}\n" \
