@@ -58,7 +58,7 @@ class Modmail(commands.Bot):
                     os.remove(f"./ticket-{member.name}-{member.id}.txt")
                 continue
     
-    @tasks.loop(hours=1.1)
+    @tasks.loop(minutes=1.1)
     async def inactive_marker(self):
         TICKETS = Ticket().get() # One List that doesnt change, so that the for loop doesnt break lol.
         tickets = Ticket().get()
