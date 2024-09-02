@@ -43,6 +43,8 @@ class Modmail(commands.Bot):
             transcript = ""
             
             if tickets[str(ticket)]["stale"]:
+                if tickets[str(ticket)]["delete_if_stale"] is False:
+                    return
                 channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
                 transcript = tickets[str(ticket)]["transcript"]
                 tickets.pop(str(ticket))

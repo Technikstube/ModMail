@@ -50,6 +50,7 @@ class StartTicketModal(ui.Modal):
             "message_ids": {},
             "last_activity": datetime.now().timestamp(),
             "stale": False,
+            "delete_if_stale": True,
             "transcript": f"ticket-{interaction.user.name}-{interaction.user.id}.txt"
         }
         Ticket().save(tickets)
@@ -63,8 +64,8 @@ class StartTicketModal(ui.Modal):
             date = datetime.now()
             f.write(
                 f"# Ticket erstellt am: {date.day}.{date.month}.{date.year}, {date.hour}:{date.minute}:{date.second}\n" \
-                f"# Grund: {self.reason.value}\n" \
-                f"# von: {interaction.user.name} ({interaction.user.id})\n\n" \
+                f"# von: {interaction.user.name} ({interaction.user.id})\n" \
+                f"# Grund: {self.reason.value}\n\n" \
                 f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {interaction.user.name}: {self.msg.content}\n"
             )
         

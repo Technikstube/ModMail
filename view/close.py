@@ -23,14 +23,23 @@ class CloseView(ui.View):
             row=1,
             label="Ticket archivieren",
         )
+        self.inactivitytogglebutton = ui.Button(
+            style=discord.ButtonStyle.gray,
+            custom_id="archive_ticket",
+            row=1,
+            label="Inaktivitätslöschung umschalten",
+        )
         
         if message is not None:
             self.original_message = message
         
         self.add_item(self.closebutton)
+        # self.add_item(self.archivebutton)
+        self.add_item(self.inactivitytogglebutton)
         
         self.closebutton.callback = self.close_callback
         self.archivebutton.callback = self.archive_callback
+        self.inactivitytogglebutton.callback = self.inactivitytoggle_callback
         
     async def close_callback(self, interaction: discord.Interaction):
         for ticket in Ticket().get():
@@ -64,4 +73,18 @@ class CloseView(ui.View):
                 return
         await interaction.response.send_message(content="Dieses Ticket wurde schon archiviert.", ephemeral=True, delete_after=3)
         
-        
+    async def inactivitytoggle_callback(self, interaction: discord.Interaction):
+        for ticket in Ticket().get():
+            if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
+                tickets = Ticket().get()
+                if tickets[str(interaction.user.id)]["delete_if_stale"]:
+                    tickets[str(interaction.user.id)]["delete_if_stale"] = False
+                else:
+                    tickets[str(interaction.user.id)]["delete_if_stale"] = True
+                Ticket().save(tickets)
+                
+                embed = discord.Embed(title="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), description="", color=discord.Color.orange())
+                embed.set_footer(text=interaction.user.name)
+                
+                await interaction.response.send_message(content="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), ephemeral=True)
+                await interaction.channel.send(embed=embed)
