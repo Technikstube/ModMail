@@ -70,7 +70,7 @@ class Events(commands.Cog):
                     description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
                         "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
                         "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
-                        "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hast.",
+                        "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hat.",
                     color=discord.Color.green()
                 )
                 await bot_msg.edit(content="", embed=embed, view=StartTicketView(user_msg, bot_msg, self.bot))
