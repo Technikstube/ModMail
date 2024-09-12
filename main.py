@@ -1,6 +1,7 @@
 import discord
 import os
 import sys
+import sentry_sdk
 import asyncio
 import signal
 import random
@@ -10,6 +11,8 @@ from discord.ext import commands, tasks
 
 from utility import Ticket, Config
 from view.close import CloseView
+
+sentry_sdk.init("http://749766348af24970beef5156986a3158@192.168.2.99:8000/1")
 
 intents = discord.Intents.default()
 intents.members = True
