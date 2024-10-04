@@ -44,7 +44,7 @@ class Events(commands.Cog):
         antispam_user["count"] += 1
         
         embed = discord.Embed(title="", description=message.content if message.content is not None else "", color=discord.Color.brand_green())
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar.url is not None else message.author.default_avatar.url)
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar is not None else message.author.default_avatar.url)
         embed.add_field(name="", value=f"**Gesendet:** <t:{round(datetime.now().timestamp())}:R>")
 
         if isinstance(message.channel, discord.DMChannel):
