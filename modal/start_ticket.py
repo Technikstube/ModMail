@@ -70,7 +70,7 @@ class StartTicketModal(ui.Modal):
             )
         
         embed_user = discord.Embed(title="", description=self.msg.content, color=discord.Color.brand_green())
-        embed_user.set_author(name=self.msg.author.name, icon_url=self.msg.author.avatar.url if self.msg.author.avatar.url is not None else self.msg.author.default_avatar.url)
+        embed_user.set_author(name=self.msg.author.name, icon_url=self.msg.author.avatar.url if self.msg.author.avatar is not None else self.msg.author.default_avatar.url)
         embed_user.add_field(name="", value=f"**Gesendet:** <t:{self.start}:R>")
         
         await interaction.response.send_message(interaction.user.mention, embed=embed)
