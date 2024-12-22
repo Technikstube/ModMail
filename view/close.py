@@ -78,20 +78,19 @@ class CloseView(ui.View):
         for ticket in Ticket().get():
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 tickets = Ticket().get()
-                if tickets[str(interaction.user.id)]["delete_if_stale"]:
+                if tickets[str(ticket)]["delete_if_stale"]:
                     self.inactivitytogglebutton.style = discord.ButtonStyle.danger
-                    tickets[str(interaction.user.id)]["delete_if_stale"] = False
+                    tickets[str(ticket)]["delete_if_stale"] = False
                 else:
                     self.inactivitytogglebutton.style = discord.ButtonStyle.success
-                    tickets[str(interaction.user.id)]["delete_if_stale"] = True
+                    tickets[str(ticket)]["delete_if_stale"] = True
                 Ticket().save(tickets)
                 
                 if self.original_message is not None:
                     await self.original_message.edit(view=self)
                 
-                embed = discord.Embed(title="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), description="", color=discord.Color.orange())
+                embed = discord.Embed(title="Inaktivitätslöschung " + ("aktiviert" if tickets[str(ticket)]["delete_if_stale"] else "deaktiviert"), description="", color=discord.Color.orange())
                 embed.set_footer(text=interaction.user.name)
-                
-                await interaction.response.send_message(content="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), ephemeral=True)
-                await interaction.channel.send(embed=embed)
+            
+                await interaction.response.send_message(embed=embed)
                 break
