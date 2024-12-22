@@ -24,12 +24,13 @@ class CloseView(ui.View):
             label="Ticket archivieren",
         )
         self.inactivitytogglebutton = ui.Button(
-            style=discord.ButtonStyle.gray,
+            style=discord.ButtonStyle.success,
             custom_id="archive_ticket",
             row=1,
             label="Inaktivitätslöschung umschalten",
         )
         
+        self.original_message = None
         if message is not None:
             self.original_message = message
         
@@ -78,13 +79,19 @@ class CloseView(ui.View):
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 tickets = Ticket().get()
                 if tickets[str(interaction.user.id)]["delete_if_stale"]:
+                    self.inactivitytogglebutton.style = discord.ButtonStyle.danger
                     tickets[str(interaction.user.id)]["delete_if_stale"] = False
                 else:
+                    self.inactivitytogglebutton.style = discord.ButtonStyle.success
                     tickets[str(interaction.user.id)]["delete_if_stale"] = True
                 Ticket().save(tickets)
+                
+                if self.original_message is not None:
+                    await self.original_message.edit(view=self)
                 
                 embed = discord.Embed(title="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), description="", color=discord.Color.orange())
                 embed.set_footer(text=interaction.user.name)
                 
                 await interaction.response.send_message(content="Inaktivitätslöschung " + ("aktiviert" if tickets[str(interaction.user.id)]["delete_if_stale"] else "deaktiviert"), ephemeral=True)
                 await interaction.channel.send(embed=embed)
+                break

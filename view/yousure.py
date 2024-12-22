@@ -45,25 +45,29 @@ class YouSureView(ui.View):
         tickets = Ticket().get()
         conf = Config().get()
         member = None
-        transcript = ""
+        transcript = None
+        
         for ticket in tickets:
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
                 member = interaction.guild.get_member(int(ticket))
                 transcript = Ticket().get()[str(ticket)].get("transcript")
                 tickets.pop(ticket)
                 break
+        Ticket().save(tickets)
+            
         if member is not None:
             embed = discord.Embed(title="Ticket wurde geschlossen", description=f"**Begründung:** {self.reason}" if self.reason is not None else "", color=discord.Color.red())
             embed.add_field(name="", value="Solltest du ein Anliegen haben, kannst du mich jederzeit wieder anschreiben.")
             await member.send(embed=embed)
-        Ticket().save(tickets)
+            
         await interaction.channel.delete()
+        
         if "transcript_channel" in conf:
-            tc = self.bot.get_channel(int(conf["transcript_channel"]))
+            transcript_channel = self.bot.get_channel(int(conf["transcript_channel"]))
             with open(f"configuration/{transcript}", "rb") as f:
                 embed = discord.Embed(title="", description=f"{interaction.channel.name} wurde von {interaction.user.mention} geschlossen.", color=discord.Color.blue())
-                await tc.send(embed=embed, file=discord.File(f))
-            os.remove(f"./configuration/{transcript}")
+                await transcript_channel.send(embed=embed, file=discord.File(f))
+        os.remove(f"./configuration/{transcript}")
         self.stop()
 
     async def cancel_callback(self, interaction: discord.Interaction):

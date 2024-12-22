@@ -12,7 +12,7 @@ class Commands(commands.Cog):
 
     @app_commands.command(name="close", description="Close a Ticket")
     @commands.guild_only()
-    @app_commands.default_permissions(manage_nicknames=True)
+    @app_commands.default_permissions(manage_messages=True)
     async def close_command(self, interaction: discord.Interaction, reason: Optional[str]):
         for ticket in Ticket().get():
             if Ticket().get_ticket_channel_id(ticket) == interaction.channel.id:
@@ -22,7 +22,7 @@ class Commands(commands.Cog):
 
         await interaction.response.send_message("Dieser Kanal ist kein Ticket.", ephemeral=True, delete_after=3)
     
-    @app_commands.command(name="set_category", description="Set the Ticket-Category")
+    @app_commands.command(name="category", description="Set the Ticket-Category")
     @commands.guild_only()
     @app_commands.default_permissions(manage_guild=True)
     async def category_command(self, interaction: discord.Interaction, category_id: str):
@@ -38,7 +38,7 @@ class Commands(commands.Cog):
         
         await interaction.response.send_message(f"Ticket-Kategorie zu `{_chn.name}` gesetzt.", ephemeral=True)
 
-    @app_commands.command(name="set_transcripts", description="Set the transcripts-channel")
+    @app_commands.command(name="transcripts", description="Set the transcripts-channel")
     @commands.guild_only()
     @app_commands.default_permissions(manage_guild=True)
     async def transcript_command(self, interaction: discord.Interaction, transcript_channel: discord.TextChannel):

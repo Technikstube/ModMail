@@ -41,29 +41,34 @@ class Modmail(commands.Bot):
         for ticket in TICKETS:
             member = None
             channel = None
+            transcript = None
+            
             channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
             member = channel.guild.get_member(int(ticket))
-            transcript = ""
             
             if tickets[str(ticket)]["stale"]:
+                
                 if tickets[str(ticket)]["delete_if_stale"] is False:
+                    print(f"Ticket Purge: skipped ticket {ticket} (inactivity deletion disabled)")
                     return
-                channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
+                
                 transcript = tickets[str(ticket)]["transcript"]
+                
+                Ticket().save(tickets)
                 tickets.pop(str(ticket))
+                await channel.delete()
+                
                 if member is not None:
                     embed = discord.Embed(title="Ticket wurde geschlossen", description="**Begründung:** Inaktivität", color=discord.Color.red())
                     embed.add_field(name="", value="Solltest du ein Anliegen haben, kannst du mich jederzeit wieder anschreiben.")
                     await member.send(embed=embed)
-                Ticket().save(tickets)
-                await channel.delete()
+                
                 if "transcript_channel" in conf:
-                    tc = self.get_channel(int(conf["transcript_channel"]))
+                    transcript_channel = self.get_channel(int(conf["transcript_channel"]))
                     with open(f"configuration/{transcript}", "rb") as f:
                         embed = discord.Embed(title="", description=f"{channel.name} wurde von {self.user.mention} geschlossen.", color=discord.Color.blue())
-                        await tc.send(embed=embed, file=discord.File(f))
+                        await transcript_channel.send(embed=embed, file=discord.File(f))
                     os.remove(f"./configuration/{transcript}")
-                continue
     
     @tasks.loop(minutes=1.1)
     async def inactive_marker(self):
@@ -74,24 +79,29 @@ class Modmail(commands.Bot):
                                     description="<:uncheck:1226665497701912728> Ticket als `Inaktiv` markiert.",
                                     color=discord.Color.red()
                                     )
+        
         for ticket in TICKETS:
             member = None
             channel = None
+            dist = None
+            
             channel = self.get_channel(Ticket().get_ticket_channel_id(int(ticket)))
             member = channel.guild.get_member(int(ticket))
             dist = round(datetime.now().timestamp()) - round(tickets[str(ticket)]["last_activity"])
+            
             if dist >= MAXIMUM_INACTIVE_SECONDS:
                 if tickets[str(ticket)]["stale"] is True:
+                    print(f"Inactivity Marker: skipped stale ticket ({ticket})")
                     continue
+                
                 tickets[str(ticket)]["stale"] = True
                 Ticket().save(tickets)
                 await channel.send(embed=stale_embed)
                 
                 if member is not None:
                     await member.send(embed=stale_embed)
-                await channel.edit(name=channel.name.replace("ticket", "inactive"))
+                    
                 await channel.move(end=True)
-                continue
 
     @tasks.loop(minutes=60.1)
     async def presence_tick(self):
