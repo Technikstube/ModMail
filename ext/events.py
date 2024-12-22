@@ -3,13 +3,61 @@ import os
 from datetime import datetime
 from discord.ext import commands
 
+from util.antispam import Antispam
 from utility import Ticket, Config
 from view.start_ticket import StartTicketView
 
-# Anti-Spam
-TIME_WINDOW_SECS = 5
-MAX_MESSAGES = 5
-DELETE_MESSAGES = MAX_MESSAGES
+def get_message_embed(message: discord.Message, deleted: bool=False, edited: bool=False):
+    
+    color = discord.Color.brand_green()
+    field_text = "Gesendet: "
+    delete = ""
+    edit = ""
+    
+    if deleted:
+        color = discord.Color.brand_red()
+        delete = "(gelöscht)"
+        field_text = "Gelöscht: "
+        
+    if edited:
+        edit = "(editiert)"
+        field_text = "Editiert: "
+    
+    message_embed = discord.Embed(title="", description=message.content if message.content is not None else "", color=color)
+    message_embed.set_author(name=f"{message.author.global_name} ({message.author.name}) {delete}{edit}", icon_url=message.author.avatar.url if message.author.avatar is not None else message.author.default_avatar.url)
+    message_embed.add_field(name="", value=f"**{field_text}**" + f"<t:{round(datetime.now().timestamp())}:R>")
+    message_embed.set_footer(text=message.author.id)
+    return message_embed
+
+async def start_ticket_creation(bot, message: discord.Message):
+    bot_msg = await message.reply("<a:loading:1272649967936471202> Einen Moment, ich bereite alles vor...")
+    user_msg = message
+    
+    create_embed = discord.Embed(
+        title="",
+        description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
+            "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
+            "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
+            "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hat.",
+        color=discord.Color.green()
+    )
+    await bot_msg.edit(content="", embed=create_embed, view=StartTicketView(user_msg, bot_msg, bot))
+
+def add_to_transcript(transcript, message: discord.Message):
+    with open(f"configuration/{transcript}", "a", encoding="utf-8") as f:
+        date = datetime.now()
+        f.write(
+            f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
+        )
+
+async def renew_ticket(ticket_owner_id: int, channel: discord.TextChannel, message: discord.Message):
+    ticket = Ticket().get()
+    ticket[str(ticket_owner_id)]["last_activity"] = datetime.now().timestamp()
+    if ticket[str(ticket_owner_id)]["stale"] is True:
+        ticket[str(ticket_owner_id)]["stale"] = False
+        await channel.edit(name=channel.name.replace("inactive", "ticket"))
+        await channel.move(beginning=True)
+    Ticket().save(ticket)
 
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -19,160 +67,90 @@ class Events(commands.Cog):
     @commands.Cog.listener(name="on_message")
     async def on_message(self, message: discord.Message):
         if message.author.bot:
-            return
-
-        member_id = message.author.id
-        
-        if not self.cache.get("users"):
-            self.cache["users"] = {}
-            
-        antispam_users = self.cache["users"]
-        
-        if not antispam_users.get(member_id):
-            antispam_users[member_id] = {
-                "last_message": datetime.now(),
-                "count": 0,
-                "notified": False
-            }
-            
-        antispam_user = antispam_users[member_id]
-        last_message = antispam_user["last_message"]
-        
-        if (datetime.now() - last_message).seconds >= TIME_WINDOW_SECS:
-            del self.cache["users"][member_id]
-        
-        antispam_user["count"] += 1
-        
-        embed = discord.Embed(title="", description=message.content if message.content is not None else "", color=discord.Color.brand_green())
-        embed.set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar is not None else message.author.default_avatar.url)
-        embed.add_field(name="", value=f"**Gesendet:** <t:{round(datetime.now().timestamp())}:R>")
-
+            return       
+    
         if isinstance(message.channel, discord.DMChannel):
-            if antispam_user["notified"] is True:
-                return
-            if antispam_user["count"] == MAX_MESSAGES:
-                if not antispam_user["notified"]:
-                    await message.author.send("> :warning: Spam ist nicht erwünscht!", delete_after=5)
-                    antispam_user["notified"] = True
+            if await Antispam().spamming(message):
                 return
             
             conf = Config().get()
+            message_embed = get_message_embed(message)
+            files = []
+            
+            # Check for ticket-category, if not set, notify user
             if "ticket_category" not in conf:
                 await message.channel.send("Die Ticket-Kategorie ist nicht eingerichtet. Melde dich bitte bei der Administration.")
                 return
-            
+
+            # Check for existing ticket, if no ticket exists, start creation of ticket
             if not Ticket().get_ticket(message.author.id):
-                bot_msg = await message.reply("<a:loading:1272649967936471202> Einen Moment, ich bereite alles vor...")
-                user_msg = message
-                
-                embed = discord.Embed(
-                    title="",
-                    description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
-                        "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
-                        "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
-                        "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hat.",
-                    color=discord.Color.green()
-                )
-                await bot_msg.edit(content="", embed=embed, view=StartTicketView(user_msg, bot_msg, self.bot))
-                return
-            
+                return await start_ticket_creation(self.bot, message)
+
+            # Get Ticket Channel in Guild
             channel = self.bot.get_channel(Ticket().get_ticket(message.author.id)["channel"])
-            
-            # Check for Attachments
-            files = []
+
+            # Add Attachments to files list
             for attachment in message.attachments:
                 files.append(await attachment.to_file())
-            
-            msg = await channel.send(embed=embed)
-            
-            with open(f"configuration/{Ticket().get_ticket(message.author.id).get("transcript")}", "a") as f:
-                date = datetime.now()
-                f.write(
-                    f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
-                )
-            
-            # Send Files if any
+
+            # Send message embed and files if any
+            msg = await channel.send(embed=message_embed)
             if files:
                 await channel.send(files=files)
-            ticket = Ticket().get()
-            ticket[str(message.author.id)]["last_activity"] = datetime.now().timestamp()
-            if ticket[str(message.author.id)]["stale"] is True:
-                ticket[str(message.author.id)]["stale"] = False
-                await channel.edit(name=channel.name.replace("inactive", "ticket"))
-                await channel.move(beginning=True)
-            Ticket().save(ticket)
+
+            # Add message to the transcript
+            add_to_transcript(Ticket().get_ticket(message.author.id).get("transcript"), message)
             Ticket().add_message(message.author.id, message.id, msg.id)
             
-            await message.add_reaction("📨")
-            
+            # Renew ticket (new last_activity timestamp, remove stale status if set)
+            await renew_ticket(message.author.id, channel, message)
+
         if isinstance(message.channel, discord.TextChannel):
             if not message.channel.name.startswith(("inactive-", "ticket-")):
                 return
             
-            if antispam_user["notified"] is True:
-                return
-            if antispam_user["count"] == MAX_MESSAGES:
-                if not antispam_user["notified"]:
-                    await message.channel.send("> :warning: Spam ist nicht erwünscht!", delete_after=5)
-                    antispam_user["notified"] = True                
+            if await Antispam().spamming(message):
                 return
             
+            conf = Config().get()
+            message_embed = get_message_embed(message)
+            files = []
+
+            tickets = Ticket().get()
             member = None
             transcript = None
-            tickets = Ticket().get()
-            
-            for ticket in tickets:
-                if Ticket().get_ticket_channel_id(ticket) == message.channel.id:
-                    member = message.guild.get_member(int(ticket))
-                    t = Ticket().get()
-                    transcript = t[str(ticket)].get("transcript")
-                    if t[str(ticket)]["stale"] is True:
-                        t[str(ticket)]["stale"] = False
-                        await message.channel.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
-                        await member.send(embed=discord.Embed(title="", description="<:helioscheckcircle:1267515445582237797> Ticket als `Aktiv` markiert.", color=discord.Color.green()))
-                        await message.channel.edit(name=message.channel.name.replace("inactive", "ticket"))
-                        await message.channel.move(beginning=True)
-                    t[str(ticket)]["last_activity"] = datetime.now().timestamp()
-                    Ticket().save(t)
+            ticket_owner_id = None
+
+            # Get Ticket Owner ID
+            for _ticket in tickets:
+                if Ticket().get_ticket_channel_id(_ticket) == message.channel.id:
+                    ticket_owner_id = _ticket
                     break
             
-            if member is None:
-                return
+            # Set Variables
+            member = message.guild.get_member(int(ticket_owner_id))
+            transcript = tickets[str(ticket_owner_id)].get("transcript")
             
-            if message.content.startswith("+"):
-                with open(f"configuration/{transcript}", "a") as f:
-                    date = datetime.now()
-                    f.write(
-                        f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | [Team] {message.author.name}: {message.content[1:]}\n"
-                    )
-                return
-            
-            files = []
+            # Add Attachments if any to files
             for attachment in message.attachments:
                 files.append(await attachment.to_file())
-                
-            msg = await member.send(embed=embed)
             
-            if files:
-                await member.send(files=files)
+            # Send message to ticket owner
+            msg = await member.send(embed=message_embed)
             
-            with open(f"configuration/{transcript}", "a") as f:
-                date = datetime.now()
-                f.write(
-                    f"{date.day}.{date.month}.{str(date.year)[2:]}, {date.hour}:{date.minute}:{date.second} | {message.author.name}: {message.content}\n"
-                )
-            
+            # Add message to transcript
+            add_to_transcript(transcript, message)
             Ticket().add_message(member.id, message.id, msg.id)
-            await message.add_reaction("📨")
-    
+            
+            # Renew ticket
+            await renew_ticket(int(ticket_owner_id), message.channel, message)
+            
     @commands.Cog.listener(name="on_message_delete")
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot:
             return
         
-        embed = discord.Embed(title="", description=message.content, color=discord.Color.brand_red())
-        embed.set_author(name=message.author.name + " (gelöscht)", icon_url=message.author.avatar.url if message.author.avatar.url is not None else message.author.default_avatar.url)
-        embed.add_field(name="", value=f"**Gelöscht:** <t:{round(datetime.now().timestamp())}:R>")    	
+        embed = get_message_embed(message, True)
 
         if isinstance(message.channel, discord.DMChannel):
             ticket = Ticket().get_ticket(message.author.id)
@@ -200,9 +178,11 @@ class Events(commands.Cog):
         if before.author.bot:
             return
         
-        embed = discord.Embed(title="", description=after.content, color=discord.Color.brand_green())
-        embed.set_author(name=before.author.name + " (editiert)", icon_url=before.author.avatar.url if before.author.avatar.url is not None else before.author.default_avatar.url)
-        embed.add_field(name="", value=f"**Editiert:** <t:{round(datetime.now().timestamp())}:R>")
+        embed = get_message_embed(after, edited=True)
+        
+        # embed = discord.Embed(title="", description=after.content, color=discord.Color.brand_green())
+        # embed.set_author(name=before.author.name + " (editiert)", icon_url=before.author.avatar.url if before.author.avatar.url is not None else before.author.default_avatar.url)
+        # embed.add_field(name="", value=f"**Editiert:** <t:{round(datetime.now().timestamp())}:R>")
         
         if isinstance(before.channel, discord.DMChannel):
             ticket = Ticket().get_ticket(before.author.id)
