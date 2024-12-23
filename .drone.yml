@@ -3,9 +3,15 @@ type: docker
 name: deployment
 
 clone:
-  disable: false
+  disable: true
 
 steps:
+
+- name: clone
+  image: alpine/git
+  commands:
+    - git clone http://$GIT_USERNAME:$GIT_TOKEN@192.168.2.11/Technikstube/ModMail.git
+    - git checkout
 
 - name: build
   image: alpinelinux/docker-cli
