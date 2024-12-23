@@ -9,8 +9,13 @@ steps:
 
 - name: clone
   image: alpine/git
+  environment:
+    USERNAME:
+      from_secret: GIT_USERNAME
+    TOKEN:
+      from_secret: GIT_TOKEN
   commands:
-    - git clone http://$GIT_USERNAME:$GIT_TOKEN@192.168.2.11/Technikstube/ModMail.git
+    - git clone http://$USERNAME:$TOKEN@192.168.2.11/Technikstube/ModMail.git
     - git checkout
 
 - name: build
