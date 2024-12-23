@@ -13,10 +13,10 @@ class StartTicketView(ui.View):
             style=discord.ButtonStyle.green,
             emoji="<:helioscheckcircle:1267515445582237797>",
             row=0,
-            label="Ticket starten",
+            label="Ticket eröffnen",
         )
         self.cancelbutton = ui.Button(
-            style=discord.ButtonStyle.danger,
+            style=discord.ButtonStyle.gray,
             row=0,
             label="Abbrechen",
         )

@@ -26,7 +26,7 @@ def get_message_embed(message: discord.Message, deleted: bool=False, edited: boo
     message_embed = discord.Embed(title="", description=message.content if message.content is not None else "", color=color)
     message_embed.set_author(name=f"{message.author.global_name} ({message.author.name}) {delete}{edit}", icon_url=message.author.avatar.url if message.author.avatar is not None else message.author.default_avatar.url)
     message_embed.add_field(name="", value=f"**{field_text}**" + f"<t:{round(datetime.now().timestamp())}:R>")
-    message_embed.set_footer(text=message.author.id)
+    message_embed.set_footer(text=f"Technikstube ModMail — {message.author.name} ({message.author.id})")
     return message_embed
 
 async def start_ticket_creation(bot, message: discord.Message):
@@ -35,7 +35,7 @@ async def start_ticket_creation(bot, message: discord.Message):
     
     create_embed = discord.Embed(
         title="",
-        description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket starten`**.\n" \
+        description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket eröffnen`**.\n" \
             "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
             "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
             "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hat.",
@@ -180,16 +180,13 @@ class Events(commands.Cog):
         
         embed = get_message_embed(after, edited=True)
         
-        # embed = discord.Embed(title="", description=after.content, color=discord.Color.brand_green())
-        # embed.set_author(name=before.author.name + " (editiert)", icon_url=before.author.avatar.url if before.author.avatar.url is not None else before.author.default_avatar.url)
-        # embed.add_field(name="", value=f"**Editiert:** <t:{round(datetime.now().timestamp())}:R>")
-        
         if isinstance(before.channel, discord.DMChannel):
             ticket = Ticket().get_ticket(before.author.id)
             transcript = ticket.get("transcript")
             msg_id = Ticket().get_copy_message(before.author.id, before.id)
             channel = self.bot.get_channel(ticket["channel"])
             msg = await channel.fetch_message(int(msg_id))
+            
             await msg.edit(embed=embed, attachments=after.attachments)
             
             with open(f"configuration/{transcript}", "a") as f:

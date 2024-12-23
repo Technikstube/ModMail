@@ -12,7 +12,7 @@ class YouSureView(ui.View):
         self.deletebutton = ui.Button(
             style=discord.ButtonStyle.danger,
             row=1,
-            label="Ticket löschen",
+            label="Ticket schließen",
         )
         self.cancelbutton = ui.Button(
             style=discord.ButtonStyle.gray,

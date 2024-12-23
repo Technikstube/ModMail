@@ -22,7 +22,7 @@ class StartTicketModal(ui.Modal):
             style=discord.TextStyle.short,
             min_length=4,
             max_length=64,
-            placeholder="Deine Begründung...",
+            placeholder="Begründung...",
             required=True,
             row=0
         )
@@ -79,7 +79,6 @@ class StartTicketModal(ui.Modal):
         msg = await channel.send(f"<a:loading:1272649967936471202> | {interaction.user.mention} <@&1139638391684726884>")
         await msg.edit(content=f"{interaction.user.mention} <@&1139638391684726884>", embed=embed, view=CloseView(self.bot, msg))
         await msg.pin()
-        await self.msg.add_reaction("📨")
         await channel.purge(limit=1)
         ticket_msg = await channel.send(embed=embed_user)
         Ticket().add_message(self.msg.author.id, self.msg.id, ticket_msg.id)
