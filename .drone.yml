@@ -15,7 +15,7 @@ steps:
     TOKEN:
       from_secret: GIT_TOKEN
   commands:
-    - git clone http://$USERNAME:$TOKEN@192.168.2.11/Technikstube/ModMail.git
+    - git clone http://$USERNAME:$TOKEN@192.168.2.11/Technikstube/ModMail.git /
 
 - name: build
   image: alpinelinux/docker-cli
