@@ -32,6 +32,7 @@ class StartTicketModal(ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):        
         conf = Config().get()
         tickets = Ticket().get()
+        files = []
         
         if "ticket_category" not in conf:
             await interaction.response.send_message("Die Ticket-Kategorie ist nicht eingerichtet. Bitte melde dich bei der Administration.")
@@ -81,6 +82,12 @@ class StartTicketModal(ui.Modal):
         await msg.pin()
         await channel.purge(limit=1)
         ticket_msg = await channel.send(embed=embed_user)
+        
+        for attachment in self.msg.attachments:
+            files.append(await attachment.to_file())
+            
+        await channel.send(files=files)
+        
         Ticket().add_message(self.msg.author.id, self.msg.id, ticket_msg.id)
         
     
