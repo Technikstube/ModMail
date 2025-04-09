@@ -127,6 +127,9 @@ class Events(commands.Cog):
                     ticket_owner_id = _ticket
                     break
             
+            if ticket_owner_id is None:
+                return
+            
             # Set Variables
             member = message.guild.get_member(int(ticket_owner_id))
             transcript = tickets[str(ticket_owner_id)].get("transcript")
