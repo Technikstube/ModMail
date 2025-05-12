@@ -110,6 +110,7 @@ class Modmail(commands.Bot):
                 type=discord.ActivityType.watching, name="Tickets"
             ),
             discord.CustomActivity(name="Technikstube Support"),
+            discord.CustomActivity(name="DM to contact Staff"),
             discord.CustomActivity(name="ModMail"),
         ]
 
