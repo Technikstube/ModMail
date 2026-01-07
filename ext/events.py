@@ -35,8 +35,7 @@ async def start_ticket_creation(bot, message: discord.Message):
     
     create_embed = discord.Embed(
         title="",
-        description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support, wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket eröffnen`**.\n" \
-            "Deine Nachricht die du mir geschrieben hast, wird als erste Nachricht im Ticket verwendet, du musst sie also nicht nochmal schreiben.\n\n" \
+        description="## :ticket: Ticket eröffnen \nWillkommen im Technikstube Support. Wenn du bereit bist dein Ticket zu öffnen, klicke einfach auf **`Ticket eröffnen`**.\n\n" \
             "> Inaktive Tickets werden nach einer Zeit automatisiert geschlossen.\n\n" \
             "-# <:helioschevronright:1267515447406887014> Du wirst darüber benachrichtigt wenn unser Team dir geantwortet hat.",
         color=discord.Color.green()

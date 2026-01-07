@@ -16,7 +16,7 @@ class StartTicketView(ui.View):
             label="Ticket eröffnen",
         )
         self.cancelbutton = ui.Button(
-            style=discord.ButtonStyle.gray,
+            style=discord.ButtonStyle.danger,
             row=0,
             label="Abbrechen",
         )
@@ -71,7 +71,7 @@ class StartTicketView(ui.View):
         
     async def on_timeout(self):
         embed = discord.Embed(
-            title="Vorgang abgebrochen...",
+            title="Du hast nicht reagiert.",
             description="Das Ticket wurde verworfen.",
             color=discord.Colour.red()
         )

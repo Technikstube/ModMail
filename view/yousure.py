@@ -33,7 +33,7 @@ class YouSureView(ui.View):
         
     async def interaction_check(self, interaction: discord.Interaction):
         if self.user != interaction.user.id:
-            await interaction.response.send_message("> :warning: Das ist nicht dein Menü.", ephemeral=True, delete_after=3)
+            await interaction.response.send_message("> :warning: Keine Berechtigung.", ephemeral=True, delete_after=3)
             return False
         return True
         

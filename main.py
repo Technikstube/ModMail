@@ -106,11 +106,8 @@ class Modmail(commands.Bot):
     @tasks.loop(minutes=60.1)
     async def presence_tick(self):
         choices: discord.Activity or discord.CustomActivity = [
-            discord.Activity(
-                type=discord.ActivityType.watching, name="Tickets"
-            ),
             discord.CustomActivity(name="Technikstube Support"),
-            discord.CustomActivity(name="DM to contact Staff"),
+            discord.CustomActivity(name="DM to contact staff"),
             discord.CustomActivity(name="ModMail"),
         ]
 
